@@ -1,0 +1,73 @@
+version: '3.8'
+
+volumes:
+  prometheusdata:
+    driver: local
+  grafanadata:
+    driver: local
+
+networks:
+  monet:
+    driver: bridge
+
+services:
+  grafana:
+    image: grafana/grafana-enterprise:${GRAFANA_VERSION}
+    container_name: grafana
+    ports:
+      - 3000:3000
+    networks:
+      - monet
+    volumes:
+      - grafanadata:/var/lib/grafana
+
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_VERSION}
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    networks:
+      - monet
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheusdata:/prometheus
+    depends_on:
+      - blackbox
+
+  blackbox:
+    image: prom/blackbox-exporter:${BLACKBOX_VERSION}
+    container_name: blackbox
+    ports:
+      - 9115:9115
+    networks:
+      - monet
+    depends_on:
+      - nodejsapp1
+      - nodejsapp2
+      - nodejsapp3
+
+
+  nodejsapp1:
+    image: nodejsapp
+    container_name: nodejsapp1
+    ports:
+      - 3001:3001
+    networks:
+      - monet
+
+  nodejsapp2:
+    image: nodejsapp
+    container_name: nodejsapp2
+    ports:
+      - 3002:3001
+    networks:
+      - monet
+  
+  nodejsapp3:
+    image: nodejsapp
+    container_name: nodejsapp3
+    ports:
+      - 3003:3001
+    networks:
+      - monet
+  
